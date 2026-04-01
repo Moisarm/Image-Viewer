@@ -1,16 +1,20 @@
 #include <stdio.h>
 #include <GLFW/glfw3.h>
+#include "../include/error-callback.h"
 
 int main(){
-    printf("Hello world");
-     GLFWwindow* window;
+    
+    //Function that sets error callback
+    glfwSetErrorCallback(error_callback);
+    
+    GLFWwindow* window;
 
     /* Initialize the library */
     if (!glfwInit())
         return -1;
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(640, 480, "Image Viewer", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -30,7 +34,7 @@ int main(){
         glfwSwapBuffers(window);
 
         /* Poll for and process events */
-        glfwPollEvents();
+        glfwWaitEvents();
     }
 
     glfwTerminate();
