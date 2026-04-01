@@ -1,2 +1,7 @@
+LIB = -lglfw -lGL
+
 all:
-	$(CC) -o file-viewer *.c
+	mkdir -p build 
+	$(CC) -o build/image-viewer *.c $(LIB)
+clean:
+	rm -rf build
