@@ -98,7 +98,7 @@ int main(){
         glUseProgram(shader_progam);
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
-        glfwSwapBuffers(window);
+        
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
