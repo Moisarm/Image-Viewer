@@ -7,6 +7,7 @@
 
 int main(){
     
+
     const char* vertex_shader_source = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "void main()\n"
@@ -22,14 +23,23 @@ int main(){
     //Function that sets error callback
     glfwSetErrorCallback(error_callback);
     
+
+   
     GLFWwindow* window;
 
     /* Initialize the library */
     if (!glfwInit())
+    {
         return -1;
-
+    }
     /* Create a windowed mode window and its OpenGL context */
     window = glfwCreateWindow(800, 800, "Image Viewer", NULL, NULL);
+
+    //Giving window hints for openGL version after the initialization of glfw
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    
     if (!window)
     {
         glfwTerminate();
