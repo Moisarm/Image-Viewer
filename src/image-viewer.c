@@ -6,7 +6,8 @@
 #include "../include/error-callback.h"
 
 int main(){
-    
+    const unsigned int SCREEN_WIDTH = 800;
+    const unsigned int SCREEN_HEIGHT = 800;
 
     const char* vertex_shader_source = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
@@ -20,11 +21,11 @@ int main(){
     "{\n"
     "	FragColor = vec4(0.8f, 0.3f, 0.02f, 1.0f);\n"
     "}\n\0";
+    
     //Function that sets error callback
     glfwSetErrorCallback(error_callback);
     
 
-   
     GLFWwindow* window;
 
     /* Initialize the library */
@@ -32,16 +33,18 @@ int main(){
     {
         return -1;
     }
-    /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(800, 800, "Image Viewer", NULL, NULL);
-
+    
     //Giving window hints for openGL version after the initialization of glfw
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     
+    /* Create a windowed mode window and its OpenGL context, this takes width, height, title, full screen and share pointers*/
+    window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Image Viewer", NULL, NULL);
+
     if (!window)
     {
+        printf("Error creating the window");
         glfwTerminate();
         return -1;
     }
