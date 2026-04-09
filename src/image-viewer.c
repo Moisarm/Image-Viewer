@@ -13,12 +13,18 @@
 
 typedef struct {
     RnState* render;
-
+    float zoom;
 } global_state;
 
-static global_state s;
+static global_state state;
+
 void resize_callback(GLFWwindow* window, int width, int height) {
-    rn_resize_display(s.render, width, height);
+    rn_resize_display(state.render, width, height);
+}
+
+void scroll_callback(GLFWwindow* window, double delta_x, double delta_y){
+    state.zoom += delta_y;
+    state.zoom = MAX((state.zoom,1.0), 15.0f);
 }
 
 int main() {
@@ -46,13 +52,17 @@ int main() {
     glfwMakeContextCurrent(window);
 
     glfwSetFramebufferSizeCallback(window, resize_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 
     
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         fprintf(stderr, "Error initializing GLAD\n");
         return -1;
     }
-    s.render = rn_init(SCREEN_WIDTH, SCREEN_HEIGHT, (RnGLLoader)glfwGetProcAddress);
+
+    state.render = rn_init(SCREEN_WIDTH, SCREEN_HEIGHT, (RnGLLoader)glfwGetProcAddress);
+    state.zoom = 1.0f;
+
 
     RnTexture image = rn_load_texture("./gojo.jpg");
 
@@ -64,30 +74,41 @@ int main() {
 
         //rn_clear_color(rn_color_from_hex(0x191970ff));
 
-        rn_begin(s.render);
+        rn_begin(state.render);
         
         float best_image_ratio = MIN
         (
-            s.render->render_w / (float)image.width, 
-            s.render->render_h / (float)image.height
+            state.render->render_w / (float)image.width, 
+            state.render->render_h / (float)image.height
         );
 
         vec2s image_size = (vec2s){image.width * best_image_ratio, image.height * best_image_ratio};
-        vec2s image_position = (vec2s){(s.render->render_w - image_size.x) /2.0f, (s.render->render_h - image_size.y) /2.0f};
+        vec2s image_position = (vec2s){(state.render->render_w - image_size.x) /2.0f, (state.render->render_h - image_size.y) /2.0f};
         
-        
-        rn_image_render(s.render, image_position, RN_WHITE, (RnTexture){
-            .width = (uint32_t)image_size.x,
-            .height = (uint32_t)image_size.y,
+        rn_set_cull_start_x(state.render, image_position.x);
+        rn_set_cull_end_x(state.render, image_position.x + image_size.x);
+
+        rn_set_cull_start_y(state.render, image_position.y);
+        rn_set_cull_end_y(state.render, image_position.y + image_size.y);
+
+        rn_image_render(state.render, image_position, RN_WHITE, (RnTexture){
+            .width = (uint32_t)image_size.x * state.zoom,
+            .height = (uint32_t)image_size.y * state.zoom,
             .id = image.id
         });
-        rn_end(s.render);
+        
+        rn_unset_cull_start_x(state.render);
+        rn_unset_cull_start_y(state.render);
+        rn_unset_cull_end_x(state.render);
+        rn_unset_cull_end_y(state.render);
+
+        rn_end(state.render);
 
         glfwSwapBuffers(window);
         glfwWaitEvents();  
     }
 
-    rn_terminate(s.render);  // Clean
+    rn_terminate(state.render);  // Clean
     glfwDestroyWindow(window);
     glfwTerminate();
     printf("Window Closed");
