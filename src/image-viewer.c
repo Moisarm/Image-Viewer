@@ -39,14 +39,20 @@ void resize_callback(GLFWwindow* window, int width, int height) {
 void scroll_callback(GLFWwindow* window, double delta_x, double delta_y){
     float old_zoom = state.zoom;
     state.zoom += delta_y;
-    state.zoom = MIN(MAX(state.zoom,1.0), 15.0f);
+    state.zoom = MIN(state.zoom,15.0);
+    state.zoom = MAX(state.zoom, 1.0f);
 
     float zoom_factor = state.zoom / old_zoom;
     double cursor_x_position, cursor_y_position;
     //Get the cursor position
     glfwGetCursorPos(window, &cursor_x_position, &cursor_y_position);
 
-    state.image_position.x = cursor_x_position - (cursor_x_position - state.image_position.x) * zoom_factor;
+    state.image_position.x = (state.image_size.x * state.zoom > state.render->render_w)? glm_clamp(cursor_x_position - (cursor_x_position - state.image_position.x) * zoom_factor, state.render->render_w - (state.image_size.x * state.zoom), 0.0) :
+    (state.render->render_w - (state.image_size.x * state.zoom)) /2.0f;
+
+
+    state.image_position.y = (state.image_size.y * state.zoom > state.render->render_h)? glm_clamp(cursor_y_position - (cursor_y_position - state.image_position.y) * zoom_factor, state.render->render_h - (state.image_size.y * state.zoom), 0.0) :
+    (state.render->render_h - (state.image_size.y * state.zoom)) /2.0f;
 }
 
 int main() {
