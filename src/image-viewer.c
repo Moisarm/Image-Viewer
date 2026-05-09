@@ -14,17 +14,39 @@
 typedef struct {
     RnState* render;
     float zoom;
+    vec2s image_position, image_size, cull_position;
+    RnTexture image;
 } global_state;
 
 static global_state state;
 
+void calculate_ratio_letterbox(){
+    float best_image_ratio = MIN
+    (
+        state.render->render_w / (float)state.image.width, 
+        state.render->render_h / (float)state.image.height
+    );
+
+    state.image_size = (vec2s){state.image.width * best_image_ratio, state.image.height * best_image_ratio};
+    state.image_position = (vec2s){(state.render->render_w - state.image_size.x) /2.0f, (state.render->render_h - state.image_size.y) /2.0f};
+}
+
 void resize_callback(GLFWwindow* window, int width, int height) {
     rn_resize_display(state.render, width, height);
+    calculate_ratio_letterbox();
 }
 
 void scroll_callback(GLFWwindow* window, double delta_x, double delta_y){
+    float old_zoom = state.zoom;
     state.zoom += delta_y;
-    state.zoom = MAX((state.zoom,1.0), 15.0f);
+    state.zoom = MIN(MAX(state.zoom,1.0), 15.0f);
+
+    float zoom_factor = state.zoom / old_zoom;
+    double cursor_x_position, cursor_y_position;
+    //Get the cursor position
+    glfwGetCursorPos(window, &cursor_x_position, &cursor_y_position);
+
+    state.image_position.x = cursor_x_position - (cursor_x_position - state.image_position.x) * zoom_factor;
 }
 
 int main() {
@@ -64,7 +86,8 @@ int main() {
     state.zoom = 1.0f;
 
 
-    RnTexture image = rn_load_texture("./gojo.jpg");
+    state.image = rn_load_texture("./gojo.jpg");
+    calculate_ratio_letterbox();
 
     while (!glfwWindowShouldClose(window)) {
         //This function set the color of the screen but this doesn't paint the screen
@@ -76,25 +99,18 @@ int main() {
 
         rn_begin(state.render);
         
-        float best_image_ratio = MIN
-        (
-            state.render->render_w / (float)image.width, 
-            state.render->render_h / (float)image.height
-        );
-
-        vec2s image_size = (vec2s){image.width * best_image_ratio, image.height * best_image_ratio};
-        vec2s image_position = (vec2s){(state.render->render_w - image_size.x) /2.0f, (state.render->render_h - image_size.y) /2.0f};
+         state.cull_position = (vec2s){(state.render->render_w - state.image_size.x) /2.0f, (state.render->render_h - state.image_size.y) /2.0f};
         
-        rn_set_cull_start_x(state.render, image_position.x);
-        rn_set_cull_end_x(state.render, image_position.x + image_size.x);
+        rn_set_cull_start_x(state.render, state.cull_position.x);
+        rn_set_cull_end_x(state.render, state.cull_position.x + state.image_size.x);
 
-        rn_set_cull_start_y(state.render, image_position.y);
-        rn_set_cull_end_y(state.render, image_position.y + image_size.y);
+        rn_set_cull_start_y(state.render, state.cull_position.y);
+        rn_set_cull_end_y(state.render, state.cull_position.y + state.image_size.y);
 
-        rn_image_render(state.render, image_position, RN_WHITE, (RnTexture){
-            .width = (uint32_t)image_size.x * state.zoom,
-            .height = (uint32_t)image_size.y * state.zoom,
-            .id = image.id
+        rn_image_render(state.render, state.image_position, RN_WHITE, (RnTexture){
+            .width = (uint32_t)state.image_size.x * state.zoom,
+            .height = (uint32_t)state.image_size.y * state.zoom,
+            .id = state.image.id
         });
         
         rn_unset_cull_start_x(state.render);
