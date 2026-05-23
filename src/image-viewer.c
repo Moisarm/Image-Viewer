@@ -13,9 +13,16 @@
 
 typedef struct {
     RnState* render;
+    
     float zoom;
+    
     vec2s image_position, image_size, cull_position;
+
+    vec2s letterbox;
+    
     RnTexture image;
+
+    float title_bar_size;
 } global_state;
 
 static global_state state;
@@ -23,16 +30,17 @@ static global_state state;
 void calculate_ratio_letterbox(){
     float best_image_ratio = MIN
     (
-        state.render->render_w / (float)state.image.width, 
-        state.render->render_h / (float)state.image.height
+        state.letterbox.x / (float)state.image.width, 
+        state.letterbox.y / (float)state.image.height
     );
 
     state.image_size = (vec2s){state.image.width * best_image_ratio, state.image.height * best_image_ratio};
-    state.image_position = (vec2s){(state.render->render_w - state.image_size.x) /2.0f, (state.render->render_h - state.image_size.y) /2.0f};
+    state.image_position = (vec2s){(state.letterbox.x - state.image_size.x) /2.0f, (state.letterbox.y - state.image_size.y) /2.0f};
 }
 
 void resize_callback(GLFWwindow* window, int width, int height) {
     rn_resize_display(state.render, width, height);
+    state.letterbox = (vec2s){ (float)width, (float)height - state.title_bar_size };
     calculate_ratio_letterbox();
 }
 
@@ -47,12 +55,12 @@ void scroll_callback(GLFWwindow* window, double delta_x, double delta_y){
     //Get the cursor position
     glfwGetCursorPos(window, &cursor_x_position, &cursor_y_position);
 
-    state.image_position.x = (state.image_size.x * state.zoom > state.render->render_w)? glm_clamp(cursor_x_position - (cursor_x_position - state.image_position.x) * zoom_factor, state.render->render_w - (state.image_size.x * state.zoom), 0.0) :
-    (state.render->render_w - (state.image_size.x * state.zoom)) /2.0f;
+    state.image_position.x = (state.image_size.x * state.zoom > state.letterbox.x)? glm_clamp(cursor_x_position - (cursor_x_position - state.image_position.x) * zoom_factor, state.letterbox.x - (state.image_size.x * state.zoom), 0.0) :
+    (state.letterbox.x - (state.image_size.x * state.zoom)) /2.0f;
 
 
-    state.image_position.y = (state.image_size.y * state.zoom > state.render->render_h)? glm_clamp(cursor_y_position - (cursor_y_position - state.image_position.y) * zoom_factor, state.render->render_h - (state.image_size.y * state.zoom), 0.0) :
-    (state.render->render_h - (state.image_size.y * state.zoom)) /2.0f;
+    state.image_position.y = (state.image_size.y * state.zoom > state.letterbox.y)? glm_clamp(cursor_y_position - (cursor_y_position - state.image_position.y) * zoom_factor, state.letterbox.y - (state.image_size.y * state.zoom), 0.0) :
+    (state.letterbox.y - (state.image_size.y * state.zoom)) /2.0f;
 }
 
 int main() {
@@ -90,7 +98,11 @@ int main() {
 
     state.render = rn_init(SCREEN_WIDTH, SCREEN_HEIGHT, (RnGLLoader)glfwGetProcAddress);
     state.zoom = 1.0f;
-
+    state.title_bar_size = 50;
+    state.letterbox = (vec2s){
+        (float)SCREEN_WIDTH,
+        (float)SCREEN_HEIGHT - state.title_bar_size
+    };
 
     state.image = rn_load_texture("./gojo.jpg");
     calculate_ratio_letterbox();
@@ -105,7 +117,15 @@ int main() {
 
         rn_begin(state.render);
         
-         state.cull_position = (vec2s){(state.render->render_w - state.image_size.x) /2.0f, (state.render->render_h - state.image_size.y) /2.0f};
+        state.letterbox = (vec2s)
+        {
+            state.render->render_w, state.render->render_h - state.title_bar_size
+        };
+        
+        state.cull_position = (vec2s)
+        {
+            (state.letterbox.x - state.image_size.x) /2.0f, (state.letterbox.y - state.image_size.y) /2.0f
+        };
         
         rn_set_cull_start_x(state.render, state.cull_position.x);
         rn_set_cull_end_x(state.render, state.cull_position.x + state.image_size.x);
