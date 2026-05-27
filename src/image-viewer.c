@@ -3,9 +3,10 @@
 #include <stdio.h>
 #include <math.h>
 #include "../include/glad/glad.h"
-#include "../include/error-callback.h"
+#include "../include/callbacks/error-callback.h"
 #include "../include/color.h"
 #include "../include/runara/include/runara/runara.h"
+#include "../include/navigation.h"
 
 #define BACKGROUND_COLOR 0.3f, 0.1f, 0.4f, 1.0f
 #define MAX(a, b) a > b ? a : b
@@ -23,6 +24,8 @@ typedef struct {
     RnTexture image;
 
     float title_bar_size;
+
+    file_navigation nav;
 } global_state;
 
 static global_state state;
@@ -63,6 +66,32 @@ void scroll_callback(GLFWwindow* window, double delta_x, double delta_y){
     (state.letterbox.y - (state.image_size.y * state.zoom)) /2.0f;
 }
 
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    if (action == GLFW_PRESS) {
+        const char* next_path = NULL;
+
+        if (key == GLFW_KEY_RIGHT) {
+            next_path = nav_next_image(&state.nav);
+        }
+        else if (key == GLFW_KEY_LEFT) {
+            next_path = nav_prev_image(&state.nav);
+        }
+       /**/ else if (key == GLFW_KEY_ESCAPE) {
+            glfwSetWindowShouldClose(window, GLFW_TRUE);
+        }
+
+        // if path change, should reload the texture
+        if (next_path) {
+            if (state.image.id != 0) {
+                glDeleteTextures(1, &state.image.id);
+            }
+            state.image = rn_load_texture(next_path);
+            state.zoom = 1.0f;
+            calculate_ratio_letterbox();
+        }
+    }
+}
+
 int main() {
     const unsigned int SCREEN_WIDTH = 800;
     const unsigned int SCREEN_HEIGHT = 800;
@@ -85,11 +114,13 @@ int main() {
         return -1;
     }
 
+    //Set context
     glfwMakeContextCurrent(window);
 
+    //Set Callbacks
     glfwSetFramebufferSizeCallback(window, resize_callback);
     glfwSetScrollCallback(window, scroll_callback);
-
+    glfwSetKeyCallback(window, key_callback);
     
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         fprintf(stderr, "Error initializing GLAD\n");
@@ -104,7 +135,15 @@ int main() {
         (float)SCREEN_HEIGHT - state.title_bar_size
     };
 
-    state.image = rn_load_texture("./gojo.jpg");
+    nav_init(&state.nav);
+    if (nav_scan_directory(&state.nav, "./gojo.jpg")) {
+        // Load the image that returned the scan with it's current index
+        state.image = rn_load_texture(nav_get_current_path(&state.nav));
+    } else {
+        // Temporary Fallback so if the scan fail, it load the texture
+        state.image = rn_load_texture("./gojo.jpg");
+    }
+    
     calculate_ratio_letterbox();
 
     while (!glfwWindowShouldClose(window)) {
@@ -145,14 +184,15 @@ int main() {
         rn_unset_cull_end_y(state.render);
 
         rn_end(state.render);
-
+        
         glfwSwapBuffers(window);
         glfwWaitEvents();  
     }
 
+    nav_free(&state.nav);
     rn_terminate(state.render);  // Clean
     glfwDestroyWindow(window);
     glfwTerminate();
-    printf("Window Closed");
+    printf("Window Closed\n");
     return 0;
 }
