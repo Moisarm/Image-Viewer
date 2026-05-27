@@ -13,7 +13,7 @@ INCLUDE_DIR = include
 BUILD_DIR = build
 
 TARGET = $(BUILD_DIR)/image-viewer
-SOURCE = $(SRC_DIR)/*.c
+SOURCE = $(shell find $(SRC_DIR) -name '*.c')
 
 all:
 	mkdir -p $(BUILD_DIR)
