@@ -1,51 +1,19 @@
 #define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
 #include <stdio.h>
-#include <math.h>
-#include "../include/glad/glad.h"
-#include "../include/callbacks/error-callback.h"
-#include "../include/color.h"
-#include "../include/runara/include/runara/runara.h"
-#include "../include/navigation.h"
+#include "glad/glad.h"
+#include "callbacks/error-callback.h"
+#include "color.h"
+#include "navigation.h"
+
+#include "callbacks/rezise-callback.h"
+#include "calculate-ratio-letterbox.h"
+
+#include "structs/global-state.h"
 
 #define BACKGROUND_COLOR 0.3f, 0.1f, 0.4f, 1.0f
-#define MAX(a, b) a > b ? a : b
-#define MIN(a, b) a < b ? a : b
-
-typedef struct {
-    RnState* render;
-    
-    float zoom;
-    
-    vec2s image_position, image_size, cull_position;
-
-    vec2s letterbox;
-    
-    RnTexture image;
-
-    float title_bar_size;
-
-    file_navigation nav;
-} global_state;
 
 static global_state state;
 
-void calculate_ratio_letterbox(){
-    float best_image_ratio = MIN
-    (
-        state.letterbox.x / (float)state.image.width, 
-        state.letterbox.y / (float)state.image.height
-    );
-
-    state.image_size = (vec2s){state.image.width * best_image_ratio, state.image.height * best_image_ratio};
-    state.image_position = (vec2s){(state.letterbox.x - state.image_size.x) /2.0f, (state.letterbox.y - state.image_size.y) /2.0f};
-}
-
-void resize_callback(GLFWwindow* window, int width, int height) {
-    rn_resize_display(state.render, width, height);
-    state.letterbox = (vec2s){ (float)width, (float)height - state.title_bar_size };
-    calculate_ratio_letterbox();
-}
 
 void scroll_callback(GLFWwindow* window, double delta_x, double delta_y){
     float old_zoom = state.zoom;
@@ -76,7 +44,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         else if (key == GLFW_KEY_LEFT) {
             next_path = nav_prev_image(&state.nav);
         }
-       /**/ else if (key == GLFW_KEY_ESCAPE) {
+        else if (key == GLFW_KEY_ESCAPE) {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
 
@@ -87,7 +55,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             }
             state.image = rn_load_texture(next_path);
             state.zoom = 1.0f;
-            calculate_ratio_letterbox();
+            calculate_ratio_letterbox(window);
         }
     }
 }
@@ -97,6 +65,7 @@ int main() {
     const unsigned int SCREEN_HEIGHT = 800;
 
     glfwSetErrorCallback(error_callback);
+
 
     if (!glfwInit()) {
         return -1;
@@ -116,6 +85,9 @@ int main() {
 
     //Set context
     glfwMakeContextCurrent(window);
+
+    //This creates a void pointer in the window variable that points to the "state" variable, so I can use it's values in other modules
+    glfwSetWindowUserPointer(window, &state);
 
     //Set Callbacks
     glfwSetFramebufferSizeCallback(window, resize_callback);
@@ -144,7 +116,7 @@ int main() {
         state.image = rn_load_texture("./gojo.jpg");
     }
     
-    calculate_ratio_letterbox();
+    calculate_ratio_letterbox(window);
 
     while (!glfwWindowShouldClose(window)) {
         //This function set the color of the screen but this doesn't paint the screen
