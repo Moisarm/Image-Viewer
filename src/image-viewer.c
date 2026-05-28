@@ -1,12 +1,13 @@
 #define GLFW_INCLUDE_NONE
 #include <stdio.h>
 #include "glad/glad.h"
-#include "callbacks/error-callback.h"
-#include "color.h"
 #include "navigation.h"
 
+#include "callbacks/error-callback.h"
 #include "callbacks/rezise-callback.h"
 #include "callbacks/scroll-callback.h"
+#include "callbacks/key-callback.h"
+
 #include "calculate-ratio-letterbox.h"
 
 #include "structs/global-state.h"
@@ -14,33 +15,6 @@
 #define BACKGROUND_COLOR 0.3f, 0.1f, 0.4f, 1.0f
 
 static global_state state;
-
-
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    if (action == GLFW_PRESS) {
-        const char* next_path = NULL;
-
-        if (key == GLFW_KEY_RIGHT) {
-            next_path = nav_next_image(&state.nav);
-        }
-        else if (key == GLFW_KEY_LEFT) {
-            next_path = nav_prev_image(&state.nav);
-        }
-        else if (key == GLFW_KEY_ESCAPE) {
-            glfwSetWindowShouldClose(window, GLFW_TRUE);
-        }
-
-        // if path change, should reload the texture
-        if (next_path) {
-            if (state.image.id != 0) {
-                glDeleteTextures(1, &state.image.id);
-            }
-            state.image = rn_load_texture(next_path);
-            state.zoom = 1.0f;
-            calculate_ratio_letterbox(window);
-        }
-    }
-}
 
 int main() {
     const unsigned int SCREEN_WIDTH = 800;
