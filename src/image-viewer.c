@@ -7,6 +7,7 @@
 #include "callbacks/rezise-callback.h"
 #include "callbacks/scroll-callback.h"
 #include "callbacks/key-callback.h"
+#include "callbacks/drag-and-drop-callback.h"
 
 #include "calculate-ratio-letterbox.h"
 
@@ -49,6 +50,7 @@ int main() {
     glfwSetFramebufferSizeCallback(window, resize_callback);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetKeyCallback(window, key_callback);
+    glfwSetDropCallback(window, drag_and_drop_callback);
     
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         fprintf(stderr, "Error initializing GLAD\n");
