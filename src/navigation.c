@@ -20,7 +20,7 @@ void nav_init(file_navigation *nav){
     memset(nav->current_directory, 0, sizeof(nav->current_directory));
 }
 
-bool nav_scan_directory(file_navigation *nav, char *initial_image_path) {
+bool nav_scan_directory(file_navigation *nav, const char *initial_image_path) {
     char path_copy[1024];
     strncpy(path_copy, initial_image_path, sizeof(path_copy));
     

@@ -6,7 +6,7 @@
 
 
 void nav_init(file_navigation *nav);
-bool nav_scan_directory(file_navigation *nav, char *initial_image_path);
+bool nav_scan_directory(file_navigation *nav, const char *initial_image_path);
 const char *nav_get_current_path(file_navigation *nav);
 const char *nav_next_image(file_navigation *nav);
 const char *nav_prev_image(file_navigation *nav);
