@@ -23,6 +23,14 @@ typedef struct {
     float title_bar_size;
 
     file_navigation nav;
-} global_state;
+
+    bool is_full_screen;
+
+    int window_width, window_height; 
+
+    int window_x, window_y;
+
+    
+} global_state; 
 
 #endif
