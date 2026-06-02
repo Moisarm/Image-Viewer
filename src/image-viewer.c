@@ -59,7 +59,8 @@ int main() {
 
     state.render = rn_init(SCREEN_WIDTH, SCREEN_HEIGHT, (RnGLLoader)glfwGetProcAddress);
     state.zoom = 1.0f;
-    state.title_bar_size = 50;
+    state.title_bar_size = 40;
+    state.is_full_screen = false;
     state.letterbox = (vec2s){
         (float)SCREEN_WIDTH,
         (float)SCREEN_HEIGHT - state.title_bar_size
