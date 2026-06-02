@@ -18,7 +18,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
         else if (key == GLFW_KEY_F11){
-            if(state->is_full_screen){
+            if(!state->is_full_screen){
+                //set as true the is_full_screen property
+                state->is_full_screen = !state->is_full_screen;
+
                 //Save current position and size of the screen
                 glfwGetWindowPos(window, &state->window_x, &state->window_y);
                 glfwGetWindowSize(window, &state->window_width, &state->window_height);
@@ -30,9 +33,22 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
                 //Activate the full screen
                 glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+
+                
             }else{
+
+                state->is_full_screen = !state->is_full_screen;
+                
+                if (state->window_width <= 0 || state->window_height <= 0) {
+                    state->window_width = 800;
+                    state->window_height = 800;
+                }
+
                 //Deactivate the full screen and set the window to it's previous position and size
-                glfwSetWindowMonitor(window, NULL, state->window_x, state->window_y, state->window_width, state->window_height, 0);
+                glfwSetWindowMonitor(window, NULL, state->window_x, state->window_y, state->window_width, state->window_height,0);
+                
+               
+                calculate_ratio_letterbox(window);
             }
         }
 
