@@ -40,8 +40,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 state->is_full_screen = !state->is_full_screen;
                 
                 if (state->window_width <= 0 || state->window_height <= 0) {
-                    state->window_width = 800;
-                    state->window_height = 800;
+                    state->window_width = SCREEN_WIDTH;
+                    state->window_height = SCREEN_HEIGHT;
                 }
 
                 //Deactivate the full screen and set the window to it's previous position and size

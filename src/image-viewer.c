@@ -18,9 +18,7 @@
 static global_state state;
 
 int main() {
-    const unsigned int SCREEN_WIDTH = 800;
-    const unsigned int SCREEN_HEIGHT = 800;
-
+   
     glfwSetErrorCallback(error_callback);
 
 
