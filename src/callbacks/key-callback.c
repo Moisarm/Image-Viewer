@@ -51,6 +51,25 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 calculate_ratio_letterbox(window);
             }
         }
+       
+        //Rotate
+        else if (key == GLFW_KEY_R) {
+            state->rotation_angle += 90.0f;
+            if (state->rotation_angle >= 360.0f) {
+                state->rotation_angle = 0.0f;
+            }
+        }
+        
+        //Vertical Flip
+        else if (key == GLFW_KEY_H) {
+            state->horizontal_flip = !state->horizontal_flip;
+        }
+        
+        //Horizontal Flip
+        else if (key == GLFW_KEY_V) {
+            state->vertical_flip = !state->vertical_flip;
+        }
+    
 
         // if path change, should reload the texture
         if (next_path) {
