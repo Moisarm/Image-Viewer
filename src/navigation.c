@@ -25,6 +25,11 @@ bool nav_scan_directory(file_navigation *nav, const char *initial_image_path) {
     strncpy(path_copy, initial_image_path, sizeof(path_copy));
     
     char* last_slash = strrchr(path_copy, '/');
+    
+    #ifdef _WIN32
+        if (!last_slash) last_slash = strrchr(current_path, '\\');
+    #endif
+    
     if (last_slash) {
         *last_slash = '\0';
         strncpy(nav->current_directory, path_copy, sizeof(nav->current_directory));
