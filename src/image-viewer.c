@@ -18,7 +18,6 @@
 static global_state state;
 
 int main() {
-   
     glfwSetErrorCallback(error_callback);
 
 
@@ -57,6 +56,9 @@ int main() {
 
     state.render = rn_init(SCREEN_WIDTH, SCREEN_HEIGHT, (RnGLLoader)glfwGetProcAddress);
     state.zoom = 1.0f;
+    state.rotation_angle = 0.0f;
+    state.vertical_flip= false;
+    state.horizontal_flip = false;
     state.title_bar_size = 40;
     state.is_full_screen = false;
     state.letterbox = (vec2s){
@@ -64,6 +66,12 @@ int main() {
         (float)SCREEN_HEIGHT - state.title_bar_size
     };
 
+    state.font = rn_load_font(state.render, "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 16);
+    if (!state.font) {
+        // Fallback that use free sans if Dejavu is not found
+        state.font = rn_load_font(state.render, "/usr/share/fonts/truetype/freefont/FreeSans.ttf", 16);
+    }
+    
     nav_init(&state.nav);
     if (nav_scan_directory(&state.nav, "./gojo.jpg")) {
         // Load the image that returned the scan with it's current index
@@ -87,13 +95,53 @@ int main() {
         
         state.letterbox = (vec2s)
         {
-            state.render->render_w, state.render->render_h - state.title_bar_size
+            (float)state.render->render_w,
+            (float)state.render->render_h - state.title_bar_size
         };
         
         state.cull_position = (vec2s)
         {
-            (state.letterbox.x - state.image_size.x) /2.0f, (state.letterbox.y - state.image_size.y) /2.0f
+            (state.letterbox.x - state.image_size.x) /2.0f, ((state.letterbox.y - state.image_size.y) /2.0f) + state.title_bar_size
         };
+
+        char metadata_buffer[256];
+        const char* current_path = nav_get_current_path(&state.nav);
+        const char* file_name = "Sin archivo";
+
+        if (current_path != NULL) {
+            const char* last_slash = strrchr(current_path, '/');
+            #ifdef _WIN32
+            if (!last_slash) last_slash = strrchr(current_path, '\\');
+            #endif
+
+            if (last_slash) {
+                file_name = last_slash + 1;
+            } else {
+                file_name = current_path;
+            }
+        }
+
+        int total_images = state.nav.image_count;
+        int current_idx = state.nav.current_index;
+
+        snprintf(metadata_buffer, sizeof(metadata_buffer),
+            " %s  |  %dx%d px  |  Zoom: %d%%  |  [%d / %d]",
+            file_name,
+            state.image.width, state.image.height,
+            (int)(state.zoom * 100.0f),
+            total_images > 0 ? (current_idx + 1) : 0,
+            total_images);
+
+        // title bar size position
+        vec2s text_position = (vec2s){ 15.0f, 15.0f };
+
+        rn_text_render(
+            state.render, 
+            metadata_buffer,            
+            state.font, 
+            text_position,              
+            RN_WHITE                    
+        );
         
         rn_set_cull_start_x(state.render, state.cull_position.x);
         rn_set_cull_end_x(state.render, state.cull_position.x + state.image_size.x);
@@ -101,11 +149,42 @@ int main() {
         rn_set_cull_start_y(state.render, state.cull_position.y);
         rn_set_cull_end_y(state.render, state.cull_position.y + state.image_size.y);
 
-        rn_image_render(state.render, state.image_position, RN_WHITE, (RnTexture){
-            .width = (uint32_t)state.image_size.x * state.zoom,
-            .height = (uint32_t)state.image_size.y * state.zoom,
-            .id = state.image.id
-        });
+        vec2s custom_texcoords[4] = {
+            (vec2s){0.0f, 0.0f}, // Bottom-Left
+            (vec2s){1.0f, 0.0f}, // Bottom-Right
+            (vec2s){1.0f, 1.0f}, // Top-Right
+            (vec2s){0.0f, 1.0f}  // Top-Left
+        };
+
+        if (state.horizontal_flip) {
+            custom_texcoords[0].x = 1.0f;
+            custom_texcoords[1].x = 0.0f;
+            custom_texcoords[2].x = 0.0f;
+            custom_texcoords[3].x = 1.0f;
+        }
+        if (state.vertical_flip) {
+            custom_texcoords[0].y = 1.0f;
+            custom_texcoords[1].y = 1.0f;
+            custom_texcoords[2].y = 0.0f;
+            custom_texcoords[3].y = 0.0f;
+        }
+
+        rn_image_render_adv(
+            state.render, 
+            state.image_position, 
+            state.rotation_angle, 
+            RN_WHITE, 
+            (RnTexture){
+                .width = (uint32_t)(state.image_size.x * state.zoom),
+                .height = (uint32_t)(state.image_size.y * state.zoom),
+                .id = state.image.id
+            },
+            custom_texcoords,     
+            false,                
+            RN_NO_COLOR,          
+            0.0f, 
+            0.0f
+        );
         
         rn_unset_cull_start_x(state.render);
         rn_unset_cull_start_y(state.render);
