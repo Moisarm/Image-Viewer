@@ -33,7 +33,11 @@ typedef struct {
 
     int window_x, window_y;
 
-    
+    RnFont* font;
+
+    float rotation_angle;
+
+    bool horizontal_flip, vertical_flip;
 } global_state; 
 
 #endif
