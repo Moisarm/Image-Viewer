@@ -1,6 +1,7 @@
 #include "structs/global-state.h"
 #include "navigation.h"
 #include "calculate-ratio-letterbox.h"
+#include "save-image.h"
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     
@@ -68,6 +69,13 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         //Horizontal Flip
         else if (key == GLFW_KEY_V) {
             state->vertical_flip = !state->vertical_flip;
+        }
+
+        //save image
+        if (key == GLFW_KEY_S && (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS))
+        {
+            
+            save_image(window, state);
         }
     
 
