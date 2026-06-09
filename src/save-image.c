@@ -20,8 +20,8 @@ void save_image(GLFWwindow* window, global_state* state){
 
     // 4. Read the pixels from the screen buffer (Framebuffers)
     glReadPixels(
-        (int)state->cull_position.x, 
-        (int)state->cull_position.y, 
+        (int)state->image_position.x, 
+        (int)state->image_position.y, 
         width, 
         height, 
         GL_RGBA, 
@@ -36,7 +36,7 @@ void save_image(GLFWwindow* window, global_state* state){
 
     // 6. Generate the new name
     char new_path[512];
-    snprintf(new_path, sizeof(new_path), "./copy_%s", ""); 
+    snprintf(new_path, sizeof(new_path), "./copy_%s", ".jpg"); 
 
     // 7. Write the new file using stb
     if (stbi_write_jpg(new_path, width, height, 4, flipped_pixels, 90)) {
